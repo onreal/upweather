@@ -5,11 +5,6 @@ declare global {
 	import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons/index.es'
 
 	namespace App {
-		// interface Error {}
-		// interface Locals {}
-		// interface PageData {}
-		// interface PageState {}
-		// interface Platform {}
 	}
 }
 
