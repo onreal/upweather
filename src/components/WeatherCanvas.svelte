@@ -26,6 +26,7 @@
     let clouds = [];
     let raindrops = [];
     let snowflakes = [];
+    let boxMargin;
 
     $: windVector = {
         x: Math.sin((windDirection * Math.PI) / 180) * windSpeed / 10,
@@ -61,8 +62,6 @@
 
     function initWeatherParticles() {
         if (!canvas) return;
-        // Generate clouds
-        //clouds = [];
         for (let i = 0; i < 50; i++) {
             clouds.push({
                 x: Math.random() * canvas.width,
@@ -73,7 +72,6 @@
             });
         }
 
-        // Generate raindrops
         for (let i = 0; i < 200; i++) {
             raindrops.push({
                 x: Math.random() * canvas.width,
@@ -82,7 +80,6 @@
             });
         }
 
-        // Generate snowflakes
         for (let i = 0; i < 100; i++) {
             snowflakes.push({
                 x: Math.random() * canvas.width,
@@ -94,10 +91,9 @@
 
     function updateClouds() {
         for (const cloud of clouds) {
-            cloud.x += windVector.x * 1.2 + Math.random() * 0.2; // Horizontal movement influenced by wind
-            cloud.y += Math.sin(cloud.x / 150) * 0.3; // Gentle vertical bobbing
+            cloud.x += windVector.x * 1.2 + Math.random() * 0.2;
+            cloud.y += Math.sin(cloud.x / 150) * 0.3;
 
-            // Wrap-around when the cloud moves off the screen
             if (cloud.x > canvas.width) {
                 cloud.x = -cloud.width;
             }
@@ -106,10 +102,9 @@
 
     function updateRain() {
         for (const drop of raindrops) {
-            drop.x += windVector.x * 5; // Move raindrop in wind direction
-            drop.y += drop.speedY;       // Move raindrop downward
+            drop.x += windVector.x * 5;
+            drop.y += drop.speedY;
 
-            // Reset position when raindrop goes out of bounds
             if (drop.y > canvas.height || drop.x > canvas.width || drop.x < 0) {
                 drop.y = Math.random() * -canvas.height;
                 drop.x = Math.random() * canvas.width;
@@ -119,10 +114,9 @@
 
     function updateSnow() {
         for (const snowflake of snowflakes) {
-            snowflake.x += windVector.x * 2; // Move snowflake in wind direction
-            snowflake.y += snowflake.speedY; // Move snowflake downward
+            snowflake.x += windVector.x * 2;
+            snowflake.y += snowflake.speedY;
 
-            // Reset position when snowflake goes out of bounds
             if (snowflake.y > canvas.height || snowflake.x > canvas.width || snowflake.x < 0) {
                 snowflake.y = Math.random() * -canvas.height;
                 snowflake.x = Math.random() * canvas.width;
@@ -151,15 +145,22 @@
             backgroundImage.src = backgroundUrl;
             backgroundImage.onload = () => {
                 ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-                //continueDrawing(ctx);
             };
         } else {
             ctx.fillStyle = calculateBackgroundColor();
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            //continueDrawing(ctx);
         }
 
         updateDayNightCycle();
+
+        drawClouds(ctx);
+        updateClouds();
+
+        drawRain(ctx);
+        updateRain();
+
+        drawSnow(ctx);
+        updateSnow();
 
         if (isDay) {
             ctx.fillStyle = 'yellow';
@@ -170,77 +171,24 @@
             ctx.arc(moonPosition.x, moonPosition.y, 30, 0, Math.PI * 2);
             ctx.fill();
         }
-
-        drawClouds(ctx);
-        updateClouds();
-
-        drawRain(ctx);
-        updateRain();
-
-        drawSnow(ctx);
-        updateSnow();
 
         drawLocation(ctx);
         drawTemperature(ctx);
         drawHumidity(ctx);
 
-
         requestAnimationFrame(animateWeather);
     };
-
-    function updateParticles() {
-        updateClouds();
-        updateRain();
-        updateSnow();
-    }
-
-    function continueDrawing(ctx) {
-        updateDayNightCycle();
-
-        // Draw sun/moon
-        if (isDay) {
-            ctx.fillStyle = 'yellow';
-            ctx.beginPath();
-            ctx.arc(sunPosition.x, sunPosition.y, 40, 0, Math.PI * 2);
-            ctx.fill();
-        } else {
-            ctx.fillStyle = 'lightgray';
-            ctx.beginPath();
-            ctx.arc(moonPosition.x, moonPosition.y, 30, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        if (locationName) {
-            ctx.fillStyle = 'black';
-            ctx.font = '24px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(locationName, canvas.width / 2, 40);
-        }
-
-        // Draw clouds, rain, and snow
-        drawClouds(ctx);
-        drawRain(ctx);
-        drawSnow(ctx);
-
-        // Update their positions
-        updateParticles();
-    }
-
-    // Default location name if not provided
-    locationName ??= 'Άιγιο';
-
-    let boxMargin; // Set the margin between boxes to 1% of the smaller dimension
 
     function drawLocation(ctx: CanvasRenderingContext2D) {
         let fontSize = Math.min(canvas.width, canvas.height) * 0.1;
         ctx.font = `${fontSize}px Roboto`;
         let textWidth = ctx.measureText(locationName).width;
         let boxHeight = fontSize + 20;
-        let padding = Math.min(canvas.width, canvas.height) * 0.02; // Set padding to 2% of the smaller dimension
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Semi-transparent white
-        ctx.fillRect(10, 10, textWidth + 4 * padding, boxHeight); // Draw the box
+        let padding = Math.min(canvas.width, canvas.height) * 0.02;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fillRect(10, 10, textWidth + 4 * padding, boxHeight);
         ctx.fillStyle = 'black';
-        ctx.fillText(locationName, 15 + padding, 20 + boxHeight / 2); // Draw the text
+        ctx.fillText(locationName, 15 + padding, 20 + boxHeight / 2);
     }
 
     function drawTemperature(ctx: CanvasRenderingContext2D) {
@@ -248,12 +196,12 @@
         ctx.font = `${fontSize}px Roboto`;
         let textWidth = ctx.measureText(temperature.toString() + '°C').width;
         let boxHeight = fontSize + 20;
-        let padding = Math.min(canvas.width, canvas.height) * 0.02; // Set padding to 2% of the smaller dimension
-        let boxY = Math.min(canvas.height - boxHeight - 10, fontSize + 30 + boxMargin); // Add margin to the y-coordinate
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Semi-transparent white
-        ctx.fillRect(10, boxY, textWidth + 4 * padding, boxHeight); // Draw the box
+        let padding = Math.min(canvas.width, canvas.height) * 0.02;
+        let boxY = Math.min(canvas.height - boxHeight - 10, fontSize + 30 + boxMargin);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fillRect(10, boxY, textWidth + 4 * padding, boxHeight);
         ctx.fillStyle = 'black';
-        ctx.fillText(temperature.toString() + '°C', 15 + padding, (boxY - boxHeight) + boxY + boxHeight / 2); // Draw the text
+        ctx.fillText(temperature.toString() + '°C', 15 + padding, (boxY - boxHeight) + boxY + boxHeight / 2);
     }
 
     function drawHumidity(ctx: CanvasRenderingContext2D) {
@@ -261,59 +209,29 @@
         ctx.font = `${fontSize}px Roboto`;
         let textWidth = ctx.measureText(humidity.toString() + ' %').width;
         let boxHeight = fontSize + 20;
-        let padding = Math.min(canvas.width, canvas.height) * 0.02; // Set padding to 2% of the smaller dimension
-        let boxY = Math.min(canvas.height - boxHeight, (fontSize * 2) + 50 + (boxMargin * 2)); // Add double margin to the y-coordinate
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Semi-transparent white
-        ctx.fillRect(10, boxY, textWidth + 4 * padding, boxHeight); // Draw the box
+        let padding = Math.min(canvas.width, canvas.height) * 0.02;
+        let boxY = Math.min(canvas.height - boxHeight, (fontSize * 2) + 50 + (boxMargin * 2));
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fillRect(10, boxY, textWidth + 4 * padding, boxHeight);
         ctx.fillStyle = 'black';
-        ctx.fillText(humidity.toString() + '%', 15 + padding, (boxHeight / 6) + boxY + boxHeight / 2); // Draw the text
+        ctx.fillText(humidity.toString() + '%', 15 + padding, (boxHeight / 6) + boxY + boxHeight / 2);
     }
 
+    function drawCloudShape(ctx, width, height) {
+        const refWidth = 420;
+        const refHeight = 180;
 
-    function drawCloudShape(ctx, x, y, width, height) {
-        const puffs = [
-            { offsetX: 0.15, offsetY: 0.25, radius: 0.4 },
-            { offsetX: 0.5, offsetY: 0.15, radius: 0.5 },
-            { offsetX: 0.85, offsetY: 0.25, radius: 0.4 },
-        ];
+        const scaleX = width / refWidth;
+        const scaleY = height / refHeight;
 
         ctx.beginPath();
-        for (let puff of puffs) {
-            const puffX = x + puff.offsetX * width;
-            const puffY = y + puff.offsetY * height;
-            const puffRadius = puff.radius * width;
-
-            //ctx.moveTo(puffX, puffY);
-            ctx.moveTo(170, 80);
-            ctx.bezierCurveTo(130, 100, 130, 150, 230, 150);
-            ctx.bezierCurveTo(250, 180, 320, 180, 340, 150);
-            ctx.bezierCurveTo(420, 150, 420, 120, 390, 100);
-            ctx.bezierCurveTo(430, 40, 370, 30, 340, 50);
-            ctx.bezierCurveTo(320, 5, 250, 20, 250, 50);
-            ctx.bezierCurveTo(200, 5, 150, 20, 170, 80);
-        }
-        ctx.closePath();
-        ctx.fill();
-    }
-
-    function drawCloudShape1(ctx, x, y, width, height) {
-        const puffs = [
-            { offsetX: 0.15, offsetY: 0.25, radius: 0.4 },
-            { offsetX: 0.5, offsetY: 0.15, radius: 0.5 },
-            { offsetX: 0.85, offsetY: 0.25, radius: 0.4 },
-        ];
-        drawCloudPuffs(ctx, x, y, width, height, puffs);
-    }
-
-    function drawCloudPuffs(ctx, x, y, width, height, puffs) {
-        ctx.beginPath();
-        ctx.moveTo(170, 80);
-        ctx.bezierCurveTo(130, 100, 130, 150, 230, 150);
-        ctx.bezierCurveTo(250, 180, 320, 180, 340, 150);
-        ctx.bezierCurveTo(420, 150, 420, 120, 390, 100);
-        ctx.bezierCurveTo(430, 40, 370, 30, 340, 50);
-        ctx.bezierCurveTo(320, 5, 250, 20, 250, 50);
-        ctx.bezierCurveTo(200, 5, 150, 20, 170, 80);
+        ctx.moveTo(170 * scaleX, 80 * scaleY);
+        ctx.bezierCurveTo(130 * scaleX, 100 * scaleY, 130 * scaleX, 150 * scaleY, 230 * scaleX, 150 * scaleY);
+        ctx.bezierCurveTo(250 * scaleX, 180 * scaleY, 320 * scaleX, 180 * scaleY, 340 * scaleX, 150 * scaleY);
+        ctx.bezierCurveTo(420 * scaleX, 150 * scaleY, 420 * scaleX, 120 * scaleY, 390 * scaleX, 100 * scaleY);
+        ctx.bezierCurveTo(430 * scaleX, 40 * scaleY, 370 * scaleX, 30 * scaleY, 340 * scaleX, 50 * scaleY);
+        ctx.bezierCurveTo(320 * scaleX, 5 * scaleY, 250 * scaleX, 20 * scaleY, 250 * scaleX, 50 * scaleY);
+        ctx.bezierCurveTo(200 * scaleX, 5 * scaleY, 150 * scaleX, 20 * scaleY, 170 * scaleX, 80 * scaleY);
         ctx.closePath();
         ctx.fill();
     }
@@ -328,57 +246,10 @@
 
             ctx.globalAlpha = 0.4 + Math.random() * 0.4;
 
-            // Draw clouds using one of the three shapes randomly
-            // const shapeIndex = Math.floor(Math.random() * 3);
-            // if (shapeIndex === 0) drawCloudShape1(ctx, 0, 0, cloud.width, cloud.height);
-            // else if (shapeIndex === 1) drawCloudShape2(ctx, 0, 0, cloud.width, cloud.height);
-            // else drawCloudShape3(ctx, 0, 0, cloud.width, cloud.height);
-            drawCloudShape(ctx, 0, 0, cloud.width, cloud.height)
+            drawCloudShape(ctx, cloud.width, cloud.height)
             ctx.restore();
         }
         ctx.globalAlpha = 1.0;
-    }
-
-    function drawCloudLayers(ctx) {
-        // First, draw the clouds that go behind the sun/moon
-        drawLayeredClouds(ctx, 0);
-
-        // Draw the sun or moon
-        drawSunOrMoon(ctx);
-
-        // Then, draw the clouds that go in front of the sun/moon but behind the location name
-        drawLayeredClouds(ctx, 1);
-
-        // Draw the location name (top layer)
-        drawLocationName(ctx);
-
-        // Finally, draw the clouds that go in front of everything
-        drawLayeredClouds(ctx, 2);
-    }
-
-    function drawLayeredClouds(ctx, layer) {
-        const cloudCount = Math.floor(cloudPercentage * clouds.length / 100);
-
-        for (let i = 0; i < cloudCount; i++) {
-            const cloud = clouds[i];
-            if (cloud.layer !== layer) continue;
-
-            ctx.save();
-            ctx.translate(cloud.x, cloud.y);
-
-            // Set random transparency for each cloud
-            const transparency = 0.4 + Math.random() * 0.4;
-            ctx.globalAlpha = transparency;
-
-            // Draw cloud shapes
-            const shapeIndex = Math.floor(Math.random() * 3);
-            if (shapeIndex === 0) drawCloudShape1(ctx, 0, 0, cloud.width, cloud.height);
-            else if (shapeIndex === 1) drawCloudShape2(ctx, 0, 0, cloud.width, cloud.height);
-            else drawCloudShape3(ctx, 0, 0, cloud.width, cloud.height);
-
-            ctx.restore();
-        }
-        ctx.globalAlpha = 1.0; // Reset global alpha after drawing
     }
 
     function drawRain(ctx) {
@@ -389,7 +260,7 @@
             ctx.beginPath();
             ctx.moveTo(drop.x, drop.y);
             ctx.lineTo(drop.x + windVector.x * 5, drop.y + drop.speedY);
-            ctx.stroke(); // Actually draw the raindrop
+            ctx.stroke();
         }
     }
 
@@ -409,7 +280,6 @@
         const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
 
         if (isDay) {
-            // Daytime gradient
             gradient.addColorStop(0, '#87CEEB');  // Sky blue
             gradient.addColorStop(1, '#FFF8E1');  // Soft yellow at horizon
         } else {
@@ -442,11 +312,29 @@
         }
     };
 
-    let needsRedraw = true;
-
     function generateIframeCode() {
         iframeCode = `<iframe src="https://weather.coolmule.gr/live?lat=${latitude}&lon=${longitude}&background=${encodeURIComponent(backgroundUrl)}" width="100%" height="auto" style="max-width:600px; height:400px;" frameborder="0"></iframe>`;
     }
+
+    $: {
+        generateIframeCode()
+        initWeatherParticles();
+    }
+
+    function updateCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        boxMargin = Math.min(canvas.width, canvas.height) * 0.01;
+        initWeatherParticles();
+        requestAnimationFrame(animateWeather);
+    }
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        initWeatherParticles();
+        requestAnimationFrame(animateWeather);
+    });
 
     onMount(() => {
         updateCanvas()
@@ -459,28 +347,6 @@
     onDestroy(() => {
         cancelAnimationFrame(animationFrameId);
     });
-
-    $: {
-        needsRedraw = true;
-        initWeatherParticles();
-    }
-
-    $: generateIframeCode();
-
-    function updateCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        boxMargin = Math.min(canvas.width, canvas.height) * 0.01;
-        initWeatherParticles();
-        requestAnimationFrame(animateWeather);
-    }
-
-    // window.addEventListener('resize', () => {
-    //     canvas.width = window.innerWidth;
-    //     canvas.height = window.innerHeight;
-    //     initWeatherParticles(); // Reinitialize particles on resize
-    //     requestAnimationFrame(animateWeather); // Continue animation
-    // });
 </script>
 
 <canvas bind:this={canvas}></canvas>
@@ -518,44 +384,7 @@
     Toggle Day/Night
 </button>
 {/if}
+
 <style lang="scss" global>
   @import '../assets/styles';
-/*    canvas {
-        border: 1px solid black;
-        background-color: lightblue;
-        width: 100vw; !* Full viewport width *!
-        height: 100vh; !* Full viewport height *!
-    }*/
-
-    canvas {
-        border: none;
-        background: none;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .embed-controls {
-        margin-top: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        max-width: 400px;
-    }
-
-    .embed-controls label {
-        font-size: 14px;
-        font-weight: bold;
-    }
-
-    .embed-controls input[type="text"], .embed-controls textarea {
-        width: 100%;
-        padding: 8px;
-        font-size: 14px;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-    }
-
-    .embed-controls textarea {
-        resize: none;
-        height: 100px;
-    }
 </style>

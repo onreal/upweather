@@ -1,4 +1,5 @@
 import {fetchWeatherApi} from "openmeteo";
+import dotenv from 'dotenv';
 
 export class OpenMeteo {
     async getWeatherData(latitude: number, longitude: number) {
@@ -9,10 +10,9 @@ export class OpenMeteo {
             "hourly": ["temperature_2m", "weather_code"],
             "daily": ["weather_code", "precipitation_sum"]
         };
-        const url = "https://api.open-meteo.com/v1/forecast";
 
         // Await the API call
-        const responses = await fetchWeatherApi(url, params);
+        const responses = await fetchWeatherApi(import.meta.env.VITE_OPW_URL, params);
 
         // Assuming responses[0] contains the relevant data (ensure this matches the actual API response format)
         const response = responses[0];

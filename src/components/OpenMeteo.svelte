@@ -1,5 +1,5 @@
 <style lang="scss" global>
-  @import '../assets/meteo';
+  @import '../assets/styles';
 </style>
 
 {#if weatherData && locationData}
@@ -51,8 +51,10 @@
 
     const getLocationName = (): string => {
 
+        const defaultName = 'Venus';
+
         if (!(locationData.address ?? false)) {
-            return 'Mars';
+            return defaultName;
         }
 
         const countryCode = locationData.address.country_code ?? '';
@@ -73,11 +75,8 @@
             || stateDistrict
             || state
             || country
-            || countryCode;
-    }
-
-    const getBackgroundUrl = () => {
-        return backgroundUrl;
+            || countryCode
+            || defaultName;
     }
 
     onMount(async () => {
@@ -88,10 +87,6 @@
 
         weatherData = await new OpenMeteo().getWeatherData(getLatitude(), getLongitude());
         locationData = await new OpenStreeMap().getReverseGeocodingData(getLatitude(), getLongitude());
-        console.log(locationData);
-        maintainAspectRatio();
-        window.addEventListener('resize', maintainAspectRatio);
-        console.log(weatherData);
     });
 
     const isValidLatitude = (lat: any): boolean => {
@@ -102,18 +97,6 @@
     const isValidLongitude = (lon: any): boolean => {
         const lonRegex = /^-?((([1]?[0-7][0-9]|[1-9]?[0-9])\.{1}\d{1,6})|([1]?[1-8][0]\.{1}\d{1,6}))$/;
         return lonRegex.test(lon) && lon >= -180 && lon <= 180;
-    }
-
-    let aspectRatioBox;
-
-    function maintainAspectRatio() {
-        if (aspectRatioBox) {
-            const width = aspectRatioBox.clientWidth;
-            const ratioWidth = 3;
-            const ratioHeight = 2;
-            const aspectRatio = ratioHeight / ratioWidth;
-            aspectRatioBox.style.height = `${width * aspectRatio}px`;
-        }
     }
 
     export const temperatureIcon = (temperature: number) => {
