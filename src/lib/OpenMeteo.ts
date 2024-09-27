@@ -1,5 +1,6 @@
 import {fetchWeatherApi} from "openmeteo";
-import dotenv from 'dotenv';
+// @ts-ignore
+import { PUBLIC_OPW_URL } from '$env/static/public';
 
 export class OpenMeteo {
     async getWeatherData(latitude: number, longitude: number) {
@@ -12,7 +13,7 @@ export class OpenMeteo {
         };
 
         // Await the API call
-        const responses = await fetchWeatherApi(import.meta.env.VITE_OPW_URL, params);
+        const responses = await fetchWeatherApi(PUBLIC_OPW_URL, params);
 
         // Assuming responses[0] contains the relevant data (ensure this matches the actual API response format)
         const response = responses[0];
