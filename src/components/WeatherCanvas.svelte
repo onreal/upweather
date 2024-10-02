@@ -322,6 +322,7 @@
     }
 
     function updateCanvas() {
+        if (!canvas) return;
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         boxMargin = Math.min(canvas.width, canvas.height) * 0.01;

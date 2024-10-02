@@ -14,6 +14,7 @@
     locationName="{getLocationName()}"
     latitude="{latitude}"
     longitude="{longitude}"
+    showControls="{showControls}"
     />
 {:else}
     <p>Loading weather data...</p>
@@ -40,6 +41,7 @@
     let latitude: string = '';
     let longitude: string = '';
     let backgroundUrl: string = '';
+    let showControls: boolean = false;
 
     const getLatitude = (): number => {
         return Number(latitude === '' || !isValidLatitude(latitude) ? '37.983810' : latitude);
@@ -59,21 +61,25 @@
 
         const countryCode = locationData.address.country_code ?? '';
         const country = locationData.address.country ?? '';
-        const state = locationData.address.state ?? '';
+        //const state = locationData.address.state ?? '';
         const stateDistrict = locationData.address.state_district ?? '';
-        const city = locationData.address.city ?? '';
-        const municipality = locationData.address.municipality ?? '';
-        const county = locationData.address.county ?? '';
+        //const city = locationData.address.city ?? '';
+        //const municipality = locationData.address.municipality ?? '';
+        //const county = locationData.address.county ?? '';
         const suburb = locationData.address.suburb ?? '';
         const village = locationData.address.village ?? '';
+        const neighbourhood = locationData.address.neighbourhood ?? '';
+        const road = locationData.address.road ?? '';
 
-        return village
+        return road
+            || neighbourhood
+            || village
             || suburb
-            || county
-            || municipality
-            || city
+//            || county
+//            || municipality
+//            || city
             || stateDistrict
-            || state
+//            || state
             || country
             || countryCode
             || defaultName;
@@ -84,18 +90,19 @@
         latitude = params.get('lat') || '';
         longitude = params.get('lon') || '';
         backgroundUrl = params.get('bg') || '';
+        showControls = params.get('sc') === '1';
 
         weatherData = await new OpenMeteo().getWeatherData(getLatitude(), getLongitude());
         locationData = await new OpenStreeMap().getReverseGeocodingData(getLatitude(), getLongitude());
     });
 
     const isValidLatitude = (lat: any): boolean => {
-        const latRegex = /^-?([1-8]?[1-9]|[1-9]0)\.{1}\d{1,6}$/;
+        const latRegex = /^-?([1-8]?[1-9]|[1-9]0)?\.{1}\d{1,14}$/;
         return latRegex.test(lat) && lat >= -90 && lat <= 90;
     }
 
     const isValidLongitude = (lon: any): boolean => {
-        const lonRegex = /^-?((([1]?[0-7][0-9]|[1-9]?[0-9])\.{1}\d{1,6})|([1]?[1-8][0]\.{1}\d{1,6}))$/;
+        const lonRegex = /^-?([1-9]?[0-9]|[1][0-7][0-9]|180)\.{1}\d{1,14}$/;
         return lonRegex.test(lon) && lon >= -180 && lon <= 180;
     }
 
