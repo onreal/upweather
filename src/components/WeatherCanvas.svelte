@@ -330,7 +330,7 @@
         requestAnimationFrame(animateWeather);
     }
 
-    window.addEventListener('resize', () => {
+    window?.addEventListener('resize', () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         initWeatherParticles();
